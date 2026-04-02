@@ -114,24 +114,27 @@ export default function PromptBuilder() {
   const currentStepConfig = dynamicStepsConfig[currentStep - 1];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-6 p-15 max-w-7xl mx-auto">
       {/* Left Column - Form */}
       <div className="flex-1">
         {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 h-auto p-0"
-          >
+        <div className="mb-8 flex flex-row gap-10">
+            <Button
+            variant="outline"
+            className="flex items-center gap-2 bg-transparent"
+            onClick={() => router.push("/")}
+            >
             <ChevronLeft className="w-4 h-4" />
             Back to Gallery
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Unlock Your Next Project
-          </h1>
-          <p className="text-muted-foreground">
-            Answer a few questions to unlock suggestions of suitable projects
-          </p>
+            </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-[#00987e] mb-2">
+              Unlock Your Next Project
+            </h1>
+            <p className="text-muted-foreground">
+              Answer a few questions to unlock suggestions of suitable projects
+            </p>
+          </div>
         </div>
 
         {/* Progress */}
