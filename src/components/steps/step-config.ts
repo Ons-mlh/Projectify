@@ -221,6 +221,7 @@ export const stepsConfig: StepConfig[] = [
     subtitle: "This affects architecture and tooling",
     answerKey: "collaborationLevel",
     type: "single",
+    required : true,
     options: [
       { id: "Solo", title: "Solo", description: "One developer" },
       { id: "SmallTeam", title: "Small Team (2–4)", description: "Shared responsibilities" },
