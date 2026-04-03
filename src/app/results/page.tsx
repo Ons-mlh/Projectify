@@ -1,61 +1,89 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, RefreshCw, Copy, Check, Sparkles, Code2, Star, Lightbulb } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  RefreshCw,
+  Copy,
+  Check,
+  Sparkles,
+  Code2,
+  Star,
+  Lightbulb,
+} from "lucide-react";
 
 interface Project {
-  number: string
-  title: string
-  description: string
-  technologies: string[]
-  features: string[]
-  whyItFits: string
+  number: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  features: string[];
+  whyItFits: string;
 }
 
 function parseProjects(raw: string): Project[] {
-  const projects: Project[] = []
+  const projects: Project[] = [];
 
   // Split by PROJECT [n]:
-  const blocks = raw.split(/PROJECT\s+\d+:/i).filter((b) => b.trim())
+  const blocks = raw.split(/PROJECT\s+\d+\s*:/i).filter((b) => {
+    const trimmed = b.trim();
+    return trimmed.length > 0 && !/^-+$/.test(trimmed);
+  });
 
   blocks.forEach((block, index) => {
-    const lines = block.trim().split("\n").map((l) => l.trim()).filter(Boolean)
+    const lines = block
+      .trim()
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-    const title = lines[0] || `Project ${index + 1}`
+    const title = lines[0] || `Project ${index + 1}`;
 
     const getSection = (label: string): string => {
-      const idx = lines.findIndex((l) => l.toUpperCase().startsWith(label.toUpperCase()))
-      if (idx === -1) return ""
+      const idx = lines.findIndex((l) =>
+        l
+          .replace(/\s*:\s*/, ":")
+          .toUpperCase()
+          .startsWith(label.toUpperCase()),
+      );
+      if (idx === -1) return "";
       // collect lines until next section header
-      const sectionLines: string[] = []
+      const sectionLines: string[] = [];
       for (let i = idx + 1; i < lines.length; i++) {
-        if (/^(DESCRIPTION|TECHNOLOGIES USED|KEY FEATURES|WHY IT FITS YOU):/i.test(lines[i])) break
-        sectionLines.push(lines[i])
+        if (
+          /^(DESCRIPTION|TECHNOLOGIES USED|KEY FEATURES|WHY IT FITS YOU)\s*:/i.test(
+            lines[i],
+          )
+        )
+          break;
+
+        if (/^-{2,}$/.test(lines[i])) break;
+        sectionLines.push(lines[i]);
       }
       // also check if the header line itself has inline content
-      const headerLine = lines[idx]
-      const inlineContent = headerLine.replace(/^[^:]+:\s*/, "").trim()
-      if (inlineContent) sectionLines.unshift(inlineContent)
-      return sectionLines.join(" ").trim()
-    }
+      const headerLine = lines[idx];
+      const inlineContent = headerLine.replace(/^[^:]+:\s*/, "").trim();
+      if (inlineContent) sectionLines.unshift(inlineContent);
+      return sectionLines.join(" ").trim();
+    };
 
-    const description = getSection("DESCRIPTION:")
-    const technologiesRaw = getSection("TECHNOLOGIES USED:")
-    const featuresRaw = getSection("KEY FEATURES:")
-    const whyItFits = getSection("WHY IT FITS YOU:")
+    const description = getSection("DESCRIPTION:");
+    const technologiesRaw = getSection("TECHNOLOGIES USED:");
+    const featuresRaw = getSection("KEY FEATURES:");
+    const whyItFits = getSection("WHY IT FITS YOU:");
 
     // Parse technologies — split by comma or newline, clean up
     const technologies = technologiesRaw
       .split(/[,\n•\-]/)
       .map((t) => t.replace(/\(.*?\)/g, "").trim())
-      .filter((t) => t.length > 1 && t.length < 40)
+      .filter((t) => t.length > 1 && t.length < 40);
 
     // Parse features — split by bullet points or newlines
     const features = featuresRaw
       .split(/[•\n\-]/)
       .map((f) => f.trim())
-      .filter((f) => f.length > 3)
+      .filter((f) => f.length > 3);
 
     projects.push({
       number: String(index + 1),
@@ -64,14 +92,14 @@ function parseProjects(raw: string): Project[] {
       technologies,
       features,
       whyItFits,
-    })
-  })
+    });
+  });
 
-  return projects
+  return projects;
 }
 
 function ProjectCard({ project, index }: { project: Project; index: number }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     const text = `
@@ -85,24 +113,43 @@ Key Features:
 ${project.features.map((f) => `• ${f}`).join("\n")}
 
 Why it fits: ${project.whyItFits}
-    `.trim()
+    `.trim();
 
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const colors = [
-    { bg: "bg-teal-50", border: "border-teal-200", badge: "bg-teal-100 text-teal-700", accent: "text-teal-600", bar: "bg-teal-400" },
-    { bg: "bg-blue-50", border: "border-blue-200", badge: "bg-blue-100 text-blue-700", accent: "text-blue-600", bar: "bg-blue-400" },
-    { bg: "bg-violet-50", border: "border-violet-200", badge: "bg-violet-100 text-violet-700", accent: "text-violet-600", bar: "bg-violet-400" },
-  ]
+    {
+      bg: "bg-teal-50",
+      border: "border-teal-200",
+      badge: "bg-teal-100 text-teal-700",
+      accent: "text-teal-600",
+      bar: "bg-teal-400",
+    },
+    {
+      bg: "bg-blue-50",
+      border: "border-blue-200",
+      badge: "bg-blue-100 text-blue-700",
+      accent: "text-blue-600",
+      bar: "bg-blue-400",
+    },
+    {
+      bg: "bg-violet-50",
+      border: "border-violet-200",
+      badge: "bg-violet-100 text-violet-700",
+      accent: "text-violet-600",
+      bar: "bg-violet-400",
+    },
+  ];
 
-  const color = colors[index % colors.length]
+  const color = colors[index % colors.length];
 
   return (
-    <div className={`relative flex flex-col rounded-2xl border bg-white overflow-hidden hover:shadow-md transition-shadow duration-200 ${color.border}`}>
-
+    <div
+      className={`relative flex flex-col rounded-2xl border bg-white overflow-hidden hover:shadow-md transition-shadow duration-200 ${color.border}`}
+    >
       {/* Top accent bar */}
       <div className={`h-1 w-full ${color.bar}`} />
 
@@ -110,7 +157,9 @@ Why it fits: ${project.whyItFits}
       <div className={`px-6 pt-5 pb-4 ${color.bg}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className={`text-xs font-bold uppercase tracking-widest ${color.accent}`}>
+            <span
+              className={`text-xs font-bold uppercase tracking-widest ${color.accent}`}
+            >
               Project {project.number}
             </span>
           </div>
@@ -118,19 +167,26 @@ Why it fits: ${project.whyItFits}
             onClick={handleCopy}
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-green-500" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mt-2 leading-snug">{project.title}</h2>
+        <h2 className="text-xl font-bold text-gray-900 mt-2 leading-snug">
+          {project.title}
+        </h2>
       </div>
 
       {/* Card body */}
       <div className="flex flex-col gap-5 px-6 py-5 flex-1">
-
         {/* Description */}
         {project.description && (
-          <p className="text-sm text-gray-500 leading-relaxed">{project.description}</p>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            {project.description}
+          </p>
         )}
 
         {/* Technologies */}
@@ -138,7 +194,9 @@ Why it fits: ${project.whyItFits}
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <Code2 className={`w-4 h-4 ${color.accent}`} />
-              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Technologies</span>
+              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Technologies
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {project.technologies.map((tech) => (
@@ -158,12 +216,19 @@ Why it fits: ${project.whyItFits}
           <div>
             <div className="flex items-center gap-2 mb-2.5">
               <Star className={`w-4 h-4 ${color.accent}`} />
-              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</span>
+              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Key Features
+              </span>
             </div>
             <ul className="flex flex-col gap-1.5">
               {project.features.slice(0, 4).map((feature, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${color.bar}`} />
+                <li
+                  key={i}
+                  className="flex items-start gap-2 text-sm text-gray-600"
+                >
+                  <span
+                    className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${color.bar}`}
+                  />
                   {feature}
                 </li>
               ))}
@@ -176,95 +241,101 @@ Why it fits: ${project.whyItFits}
           <div className={`rounded-xl p-4 ${color.bg} border ${color.border}`}>
             <div className="flex items-center gap-2 mb-1.5">
               <Lightbulb className={`w-4 h-4 ${color.accent}`} />
-              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Why it fits you</span>
+              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Why it fits you
+              </span>
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">{project.whyItFits}</p>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {project.whyItFits}
+            </p>
           </div>
         )}
-
       </div>
     </div>
-  )
+  );
 }
 
 export default function ResultsPage() {
-  const router = useRouter()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [raw, setRaw] = useState<string>("")
-  const [parseError, setParseError] = useState(false)
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [raw, setRaw] = useState<string>("");
+  const [parseError, setParseError] = useState(false);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("projectSuggestions")
+    const stored = sessionStorage.getItem("projectSuggestions");
     if (!stored) {
-      router.push("/project-generator")
-      return
+      router.push("/project-generator");
+      return;
     }
-    setRaw(stored)
+    setRaw(stored);
     try {
-      const parsed = parseProjects(stored)
-      if (parsed.length === 0) {
-        setParseError(true)
+      const parsed = parseProjects(stored);
+      const valid = parsed.filter((p) => p.title && p.description).slice(0, 3);
+
+      if (valid.length === 0) {
+        setParseError(true);
       } else {
-        setProjects(parsed)
+        setProjects(valid);
       }
     } catch {
-      setParseError(true)
+      setParseError(true);
     }
-  }, [])
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50">
-
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <button
-            onClick={() => router.push("/project-generator")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to form
-          </button>
-          <button
-            onClick={() => {
-              sessionStorage.removeItem("projectSuggestions")
-              router.push("/project-generator")
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 rounded-lg px-4 py-2 transition-colors bg-white"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Regenerate
-          </button>
-        </div>
-      </div>
-
       {/* Page title */}
-      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="w-5 h-5 text-teal-500" />
-          <span className="text-sm font-semibold text-teal-600 uppercase tracking-widest">AI Generated</span>
+      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8 flex flex-row items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="w-5 h-5 text-teal-500" />
+            <span className="text-sm font-semibold text-teal-600 uppercase tracking-widest">
+              AI Generated
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Your project suggestions
+          </h1>
+          <p className="text-gray-500 mt-2">
+            Here are 3 ideas tailored to your profile. Click copy to save any of
+            them.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Your project suggestions</h1>
-        <p className="text-gray-500 mt-2">Here are 3 ideas tailored to your profile. Click copy to save any of them.</p>
+        <button
+          onClick={() => {
+            sessionStorage.removeItem("projectSuggestions");
+            router.push("/project-generator");
+          }}
+          className="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 rounded-lg px-4 py-2 transition-colors bg-white"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Regenerate
+        </button>
       </div>
 
       {/* Cards */}
       <div className="max-w-6xl mx-auto px-6 pb-20">
         {parseError ? (
-          // Fallback: show raw text if parsing fails
           <div className="bg-white rounded-2xl border border-gray-100 p-8">
-            <p className="text-sm font-semibold text-gray-700 mb-4">Raw suggestions from AI:</p>
-            <pre className="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">{raw}</pre>
+            <p className="text-sm font-semibold text-gray-700 mb-4">
+              Raw suggestions from AI:
+            </p>
+            <pre className="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">
+              {raw}
+            </pre>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project, index) => (
-              <ProjectCard key={project.number} project={project} index={index} />
+              <ProjectCard
+                key={project.number}
+                project={project}
+                index={index}
+              />
             ))}
           </div>
         )}
       </div>
-
     </main>
-  )
+  );
 }

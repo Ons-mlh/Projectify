@@ -3,47 +3,32 @@ import { buildPrompt } from "@/lib/buildPrompt";
 import { NextRequest, NextResponse } from "next/server";
 
 const client = new OpenAi({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://models.github.ai/inference",
+  apiKey: process.env.GITHUB_TOKEN,
 });
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
   const prompt = buildPrompt(body);
-  const models = [
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "google/gemma-3-27b-it:free",
-  "meta-llama/llama-3.2-3b-instruct:free",
-  "qwen/qwen3.6-plus:free",
-]
 
   let response: any;
 
-  for (const model of models) {
     try {
       response = await client.chat.completions.create({
-        model: model,
+        model: "meta/Meta-Llama-3.1-405B-Instruct",
         messages: [{ role: "user", content: prompt }],
+        max_tokens: 2000,
       });
-      break;
+
     } catch (err: any) {
         console.error("Full error:", JSON.stringify(err, null, 2))
       if (err.status === 429) {
-        console.warn(`${model} is rate limited, trying next...`);
+        console.warn(`llm model is rate limited, trying next...`);
       }
     }
-  }
-  if (!response) {
-    return NextResponse.json(
-      {
-        error:
-          "All models are currently rate limited. Please try again in a few minutes.",
-      },
-      { status: 429 },
-    );
-  }
 
   const result = response.choices[0].message.content;
+  console.log(result);
   return NextResponse.json({ result });
 }

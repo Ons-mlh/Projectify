@@ -157,6 +157,19 @@ export const stepsConfig: StepConfig[] = [
   },
   {
     stepNumber: 5,
+    title: "How will you work on this project?",
+    subtitle: "This affects architecture and tooling",
+    answerKey: "collaborationLevel",
+    type: "single",
+    required : true,
+    options: [
+      { id: "Solo", title: "Solo", description: "One developer" },
+      { id: "SmallTeam", title: "Small Team (2–4)", description: "Shared responsibilities" },
+      { id: "LargeTeam", title: "Large Team (5+)", description: "Structured collaboration" },
+    ],
+  },
+  {
+    stepNumber: 6,
     title: "What kind of project do you want to build?",
     subtitle: "Choose the format that best fits your idea",
     answerKey: "projectType",
@@ -171,7 +184,7 @@ export const stepsConfig: StepConfig[] = [
     ],
   },
   {
-    stepNumber: 6,
+    stepNumber: 7,
     title: "What is your primary goal?",
     subtitle: "This determines depth, quality, and scope",
     answerKey: "goal",
@@ -186,7 +199,7 @@ export const stepsConfig: StepConfig[] = [
     ],
   },
   {
-    stepNumber: 7,
+    stepNumber: 8,
     title: "Who will use this project?",
     subtitle: "Define the primary users",
     answerKey: "targetAudience",
@@ -200,7 +213,7 @@ export const stepsConfig: StepConfig[] = [
     ],
   },
   {
-    stepNumber: 8,
+    stepNumber: 9,
     title: "Which industry or context?",
     subtitle: "Optional but helps make the project realistic",
     answerKey: "industryDomain",
@@ -215,19 +228,7 @@ export const stepsConfig: StepConfig[] = [
       { id: "other", title: "Generic / Other", description: "No specific industry" },
     ],
   },
-  {
-    stepNumber: 9,
-    title: "How will you work on this project?",
-    subtitle: "This affects architecture and tooling",
-    answerKey: "collaborationLevel",
-    type: "single",
-    required : true,
-    options: [
-      { id: "Solo", title: "Solo", description: "One developer" },
-      { id: "SmallTeam", title: "Small Team (2–4)", description: "Shared responsibilities" },
-      { id: "LargeTeam", title: "Large Team (5+)", description: "Structured collaboration" },
-    ],
-  },
+  
   {
     stepNumber: 10,
     title: "Which features should be included?",
