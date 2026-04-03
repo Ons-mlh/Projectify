@@ -102,8 +102,9 @@ export default function PromptBuilder() {
       }
       sessionStorage.setItem("projectSuggestions", data.result);
       router.push("/results");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : "An unknown error occurred";
+      setError(error);
     } finally {
       setIsLoading(false);
     }

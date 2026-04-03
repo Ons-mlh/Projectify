@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, Lightbulb, Zap, Heart, Github } from "lucide-react";
+import { ArrowRight, Lightbulb, Zap, Heart } from "lucide-react";
 import { Bot, LaptopMinimalCheck } from 'lucide-react';
 
 export const FloatingIcons = () => (
@@ -110,11 +110,11 @@ export default function AboutPage() {
               <p>
                 The answer turned out to be yes. The project evolved into a
                 full-featured tool with a multi-step form, dynamic tech stack
-                selection, and AI-generated suggestions tailored to the user's
+                selection, and AI-generated suggestions tailored to the user&apos;s
                 exact preferences.
               </p>
               <p>
-                It's still growing. The goal is to keep it simple, honest, and
+                It&apos;s still growing. The goal is to keep it simple, honest, and
                 useful for any developer staring at a blank page.
               </p>
             </div>
@@ -171,11 +171,11 @@ export default function AboutPage() {
 
       <section className="max-w-4xl mx-auto px-6 py-20">
         <h2 className="text-2xl font-bold text-gray-900 mb-3">
-          How it's built
+          How it&apos;s built
         </h2>
         <p className="text-gray-500 mb-10 max-w-lg">
           Projectify is a Next.js application using OpenRouter to access free
-          LLM models. Here's the full tech stack:
+          LLM models. Here&apos;s the full tech stack:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {techStack.map((t) => (

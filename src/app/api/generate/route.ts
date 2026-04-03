@@ -12,23 +12,34 @@ export async function POST(req: NextRequest) {
 
   const prompt = buildPrompt(body);
 
-  let response: any;
+  let response: OpenAi.Chat.ChatCompletion | null = null;
 
-    try {
-      response = await client.chat.completions.create({
-        model: "meta/Meta-Llama-3.1-405B-Instruct",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 2000,
-      });
+  try {
+    response = await client.chat.completions.create({
+      model: "meta/Meta-Llama-3.1-405B-Instruct",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2000,
+    });
+  } catch (err: unknown) {
+    const error = err as { status?: number; message?: string };
+    console.error("Full error:", JSON.stringify(error, null, 2));
 
-    } catch (err: any) {
-        console.error("Full error:", JSON.stringify(err, null, 2))
-      if (err.status === 429) {
-        console.warn(`llm model is rate limited, trying next...`);
-      }
+    if (error.status === 429) {
+      console.warn("llm model is rate limited, trying next...");
     }
+    return NextResponse.json(
+      { error: "Failed to generate projects" },
+      { status: 500 }
+    );
+  }
+
+  if (!response) {
+    return NextResponse.json(
+      { error: "No response from AI model" },
+      { status: 500 }
+    );
+  }
 
   const result = response.choices[0].message.content;
-  console.log(result);
   return NextResponse.json({ result });
 }
