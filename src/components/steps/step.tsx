@@ -1,28 +1,36 @@
-"use client"
+"use client";
 
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import type { StepConfig } from "./step-config"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import type { StepConfig } from "./step-config";
 
 interface StepProps {
-  config: StepConfig
-  value?: string | string[]
-  onChange: (value: string | string[]) => void
+  config: StepConfig;
+  value?: string | string[];
+  onChange: (value: string | string[]) => void;
+  customValue?: string;
+  onCustomChange?: (value: string) => void;
 }
 
-export default function Step({ config, value, onChange }: StepProps) {
-  const { stepNumber, title, subtitle, options, type, required } = config
+export default function Step({
+  config,
+  value,
+  onChange,
+  customValue,
+  onCustomChange,
+}: StepProps) {
+  const { stepNumber, title, subtitle, options, type, required } = config;
 
   const handleCheckboxChange = (optionId: string, checked: boolean) => {
-    const currentValues = Array.isArray(value) ? value : []
+    const currentValues = Array.isArray(value) ? value : [];
     if (checked) {
-      onChange([...currentValues, optionId])
+      onChange([...currentValues, optionId]);
     } else {
-      onChange(currentValues.filter((v) => v !== optionId))
+      onChange(currentValues.filter((v) => v !== optionId));
     }
-  }
+  };
 
   return (
     <div>
@@ -38,7 +46,9 @@ export default function Step({ config, value, onChange }: StepProps) {
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               {subtitle}
-              {required && <span className="text-red-500 ml-1">(Required)</span>}
+              {required && (
+                <span className="text-red-500 ml-1">(Required)</span>
+              )}
             </p>
           </div>
         </div>
@@ -46,7 +56,10 @@ export default function Step({ config, value, onChange }: StepProps) {
 
       {/* Single select */}
       {type === "single" && (
-        <RadioGroup value={(value as string) || ""} onValueChange={(val) => onChange(val)}>
+        <RadioGroup
+          value={(value as string) || ""}
+          onValueChange={(val) => onChange(val)}
+        >
           <div className="space-y-2">
             {options.map((option) => (
               <div
@@ -80,7 +93,7 @@ export default function Step({ config, value, onChange }: StepProps) {
       {type === "multiple" && (
         <div className="space-y-2">
           {options.map((option) => {
-            const isChecked = Array.isArray(value) && value.includes(option.id)
+            const isChecked = Array.isArray(value) && value.includes(option.id);
             return (
               <div
                 key={option.id}
@@ -97,18 +110,39 @@ export default function Step({ config, value, onChange }: StepProps) {
                 />
                 <Label
                   htmlFor={`${stepNumber}-${option.id}`}
-                  className="flex-1 cursor-pointer min-w-0"
+                  className="flex flex-col cursor-pointer min-w-0 gap-0.5"
                 >
-                  <p className="font-medium text-sm sm:text-base text-foreground">
+                  <p className="font-medium text-sm text-foreground">
                     {option.title}
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted-foreground">
                     {option.description}
                   </p>
                 </Label>
               </div>
-            )
+            );
           })}
+
+          {onCustomChange && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Other technologies{" "}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Prisma, Redis, GraphQL..."
+                value={customValue || ""}
+                onChange={(e) => onCustomChange(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Separate multiple technologies with commas
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -122,5 +156,5 @@ export default function Step({ config, value, onChange }: StepProps) {
         />
       )}
     </div>
-  )
+  );
 }

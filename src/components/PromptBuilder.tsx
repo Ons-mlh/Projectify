@@ -117,7 +117,7 @@ export default function PromptBuilder() {
               <ChevronLeft className="w-4 h-4" />
               Back
             </Button>
-            {/* ✅ No flex-row here — purely vertical stack */}
+          
             <h1 className="text-2xl sm:text-3xl font-bold text-teal-600 leading-tight mb-1">
               Unlock Your Next Project
             </h1>
@@ -166,6 +166,12 @@ export default function PromptBuilder() {
               value={answers[currentStepConfig.answerKey]}
               onChange={(value) =>
                 handleAnswerChange(currentStepConfig.answerKey, value)
+              }
+              customValue={currentStep === 3 ? answers.customTechnologies : undefined}
+              onCustomChange={
+                currentStep === 3 ?
+                (val) => setAnswers((prev) => ({...prev, customTechnologies: val})) 
+                : undefined
               }
             />
           </Card>

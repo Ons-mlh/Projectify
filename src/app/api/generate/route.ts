@@ -1,6 +1,7 @@
 import OpenAi from "openai";
 import { buildPrompt } from "@/lib/buildPrompt";
 import { NextRequest, NextResponse } from "next/server";
+import { FormAnswersSchema } from "@/lib/validation";
 
 const client = new OpenAi({
   baseURL: "https://models.github.ai/inference",
@@ -10,7 +11,21 @@ const client = new OpenAi({
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const prompt = buildPrompt(body);
+  const parsed = FormAnswersSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error :"Invalid input",
+        details : parsed.error.flatten().fieldErrors,
+      },
+      {status: 400}
+    )
+  }
+
+  const answers = parsed.data;
+
+  const prompt = buildPrompt(answers);
 
   let response: OpenAi.Chat.ChatCompletion | null = null;
 

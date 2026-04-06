@@ -18,6 +18,7 @@ export interface FormAnswers {
   domain: string
   difficulty: "Beginner" | "Intermediate" | "Advanced"
   technologies: string[]
+  customTechnologies?: string
   timeAvailable: string
   projectType?: string
   goal?: string
@@ -133,7 +134,7 @@ export const stepsConfig: StepConfig[] = [
   {
     stepNumber: 3,
     title: "Which technologies do you want to use?",
-    subtitle: "Technologies based on your selected domain",
+    subtitle: "Select from the list or type your own below",
     answerKey: "technologies",
     type: "multiple",
     required: true,

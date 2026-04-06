@@ -1,22 +1,28 @@
 import { FormAnswers } from "@/components/steps/step-config";
 
-export function buildPrompt ( answers: FormAnswers) : string {
-    const {
-        domain,
-        difficulty,
-        technologies, 
-        timeAvailable,
-        projectType,
-        goal,
-        targetAudience,
-        industryDomain,
-        collaborationLevel,
-        features,
-        additionalConstraints,
-    } = answers;
+export function buildPrompt(answers: FormAnswers): string {
+  const {
+    domain,
+    difficulty,
+    technologies,
+    customTechnologies,
+    timeAvailable,
+    projectType,
+    goal,
+    targetAudience,
+    industryDomain,
+    collaborationLevel,
+    features,
+    additionalConstraints,
+  } = answers;
 
-    // required fields
-    const requiredContext = `
+  const allTechnologies = [
+    ...technologies,
+    ...(customTechnologies ? customTechnologies.split(',').map((t) => t.trim()).filter(Boolean) : []),
+  ]
+
+  // required fields
+  const requiredContext = `
         DEVELOPER PROFILE:
         - Domain : ${domain}
         - Experience Level : ${difficulty}
@@ -25,37 +31,40 @@ export function buildPrompt ( answers: FormAnswers) : string {
         - Collaboration : ${collaborationLevel}
     `.trim();
 
-    // optional field
-    const optionalLines : string[] = [];
+  // optional field
+  const optionalLines: string[] = [];
 
-    if (projectType) {
-        optionalLines.push(`- Project Type : ${projectType}`);
-    }
+  if (projectType) {
+    optionalLines.push(`- Project Type : ${projectType}`);
+  }
 
-    if (goal) {
-        optionalLines.push(`- Primary Goal : ${goal}`);
-    }
+  if (goal) {
+    optionalLines.push(`- Primary Goal : ${goal}`);
+  }
 
-    if (targetAudience) {
-        optionalLines.push(`- Target Audience : ${targetAudience}`);
-    }
+  if (targetAudience) {
+    optionalLines.push(`- Target Audience : ${targetAudience}`);
+  }
 
-    if (industryDomain) {
-        optionalLines.push(`- Industry/Context : ${industryDomain}`);
-    }
+  if (industryDomain) {
+    optionalLines.push(`- Industry/Context : ${industryDomain}`);
+  }
 
-    if (features && features.length > 0) {
-        optionalLines.push(`- Desired Features : ${features.join(", ")}`);
-    }
+  if (features && features.length > 0) {
+    optionalLines.push(`- Desired Features : ${features.join(", ")}`);
+  }
 
-    if (additionalConstraints && additionalConstraints.trim() !== "") {
-        optionalLines.push(`- Additional Constraints : ${additionalConstraints}`);
-    }
+  if (additionalConstraints && additionalConstraints.trim() !== "") {
+    optionalLines.push(`- Additional Constraints : ${additionalConstraints}`);
+  }
 
-    const optionalContext = optionalLines.length > 0 ? `\nADDITIONAL PREFERENCES :\n ${optionalLines.join("\n")}` : "";
+  const optionalContext =
+    optionalLines.length > 0
+      ? `\nADDITIONAL PREFERENCES :\n ${optionalLines.join("\n")}`
+      : "";
 
-    // final prompt 
-    return `
+  // final prompt
+  return `
         You are an expert software project advisor. Your job is to suggest personnalized project ideas based on a developer's profile and preferences.
 
         ${requiredContext} ${optionalContext}
@@ -63,7 +72,7 @@ export function buildPrompt ( answers: FormAnswers) : string {
         Based on the  above, suggest exactly 3 different project ideas. Each project MUST be :
         - Realistic to complete within the given time (${timeAvailable})
         - Appropriate for a ${difficulty} level developer
-        - Buildable using the specified technologies : ${technologies.join(", ")}
+        - Buildable using the specified technologies : ${allTechnologies.join(", ")}
         - Pratical and specific, not generic
 
         For each project, respond in the EXACT form:
@@ -83,10 +92,17 @@ export function buildPrompt ( answers: FormAnswers) : string {
         - [Feature 3]
         - [Feature 4]
 
-        WHY IT FITS YOU :
-        [1-2 sentence explaining why this matches their level, time and goals] 
+        WHY IT FITS YOU:
+        [Write a UNIQUE reason specific to THIS project only. Mention the project title explicitly.
+        Explain exactly why THIS project — not the others — matches their ${difficulty} level,
+        fits within ${timeAvailable}, and makes good use of ${technologies.join(", ")}.
+        Do NOT copy or repeat the same explanation across projects.]
+
         ---
         Be specific, creative, and avoid suggesting projects that are too basic or too complex for the given profile.
-    `.trim();
 
+        IMPORTANT: The WHY IT FITS YOU section must be completely different for each project.
+        Each one should mention the specific project name and explain what makes it uniquely
+        suitable compared to the other suggestions.
+    `.trim();
 }
