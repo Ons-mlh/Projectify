@@ -27,33 +27,48 @@ export default function Step({ config, value, onChange }: StepProps) {
   return (
     <div>
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm font-semibold">
+        <div className="flex items-start gap-3 mb-2">
+          <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-0.5">
             {stepNumber}
           </div>
-          <h2 className="text-lg font-semibold text-foreground">
-            {title}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </h2>
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground leading-snug">
+              {title}
+              {required && <span className="text-red-500 ml-1">*</span>}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {subtitle}
+              {required && <span className="text-red-500 ml-1">(Required)</span>}
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground ml-8">
-          {subtitle}
-          {required && <span className="text-red-500 ml-1">(Required)</span>}
-        </p>
       </div>
 
+      {/* Single select */}
       {type === "single" && (
         <RadioGroup value={(value as string) || ""} onValueChange={(val) => onChange(val)}>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {options.map((option) => (
               <div
                 key={option.id}
-                className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-3 p-3 sm:p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
               >
-                <RadioGroupItem value={option.id} id={`${stepNumber}-${option.id}`} className="mt-1" />
-                <Label htmlFor={`${stepNumber}-${option.id}`} className="flex-1 cursor-pointer">
-                  <p className="font-medium text-foreground">{option.title}</p>
-                  <p className="text-sm text-muted-foreground">{option.description}</p>
+                <RadioGroupItem
+                  value={option.id}
+                  id={`${stepNumber}-${option.id}`}
+                  className="mt-0.5 flex-shrink-0"
+                />
+                <Label
+                  htmlFor={`${stepNumber}-${option.id}`}
+                  className="flex-1 cursor-pointer min-w-0"
+                >
+                  {/* ✅ Stack title and description vertically always */}
+                  <p className="font-medium text-sm sm:text-base text-foreground">
+                    {option.title}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                    {option.description}
+                  </p>
                 </Label>
               </div>
             ))}
@@ -61,25 +76,35 @@ export default function Step({ config, value, onChange }: StepProps) {
         </RadioGroup>
       )}
 
+      {/* Multiple select */}
       {type === "multiple" && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {options.map((option) => {
             const isChecked = Array.isArray(value) && value.includes(option.id)
             return (
               <div
                 key={option.id}
-                className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-3 p-3 sm:p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => handleCheckboxChange(option.id, !isChecked)}
               >
                 <Checkbox
                   id={`${stepNumber}-${option.id}`}
                   checked={isChecked}
-                  onCheckedChange={(checked) => handleCheckboxChange(option.id, checked as boolean)}
-                  className="mt-1"
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(option.id, checked as boolean)
+                  }
+                  className="mt-0.5 flex-shrink-0"
                 />
-                <Label htmlFor={`${stepNumber}-${option.id}`} className="flex-1 cursor-pointer">
-                  <p className="font-medium text-foreground">{option.title}</p>
-                  <p className="text-sm text-muted-foreground">{option.description}</p>
+                <Label
+                  htmlFor={`${stepNumber}-${option.id}`}
+                  className="flex-1 cursor-pointer min-w-0"
+                >
+                  <p className="font-medium text-sm sm:text-base text-foreground">
+                    {option.title}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                    {option.description}
+                  </p>
                 </Label>
               </div>
             )
@@ -87,12 +112,13 @@ export default function Step({ config, value, onChange }: StepProps) {
         </div>
       )}
 
+      {/* Text input */}
       {type === "text" && (
         <Textarea
           placeholder="Enter any additional constraints, requirements, or notes..."
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="min-h-32 resize-none"
+          className="min-h-32 resize-none text-sm"
         />
       )}
     </div>

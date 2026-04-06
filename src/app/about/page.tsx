@@ -6,11 +6,11 @@ import { Bot, LaptopMinimalCheck } from 'lucide-react';
 
 export const FloatingIcons = () => (
     <>
-        <div className="fixed left-6 top-1/3 -translate-y-1/2 text-teal-500 opacity-20 pointer-events-none">
-            <Bot className="w-24 h-24 animate-bounce" />
+        <div className="hidden lg:flex fixed left-6 top-1/3 -translate-y-1/2 text-teal-500 opacity-20 pointer-events-none">
+            <Bot className="w-16 h-16 lg:w-24 lg:h-24 animate-bounce" />
         </div>
-        <div className="fixed right-6 top-1/2 -translate-y-1/2 text-teal-500 opacity-20 pointer-events-none">
-            <LaptopMinimalCheck className="w-24 h-24 animate-bounce" style={{ animationDelay: "0.5s" }} />
+        <div className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 text-teal-500 opacity-20 pointer-events-none">
+            <LaptopMinimalCheck className="w-16 h-16 lg:w-24 lg:h-24 animate-bounce" style={{ animationDelay: "0.5s" }} />
         </div>
     </>
 );
