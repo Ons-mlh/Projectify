@@ -149,9 +149,13 @@ export const FormAnswersSchema = z.object({
     .optional(),
 
   additionalConstraints: z
-    .string()
-    .max(500, "Constraints text too long — keep it under 500 characters")
-    .optional(),
+  .string()
+  .max(300, "Keep constraints under 300 characters")
+  .regex(
+    /^[a-zA-Z0-9\s,.\-_!?()\/]+$/,
+    "Only letters, numbers and basic punctuation allowed"
+  )
+  .optional(),
 
   customTechnologies: z
     .string()
