@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { usePathname } from "next/navigation"
+import AuthButtons from "./AuthButton"
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -55,6 +56,8 @@ export default function NavBar() {
               </Link>
             ))}
           </div>
+
+          <AuthButtons />
 
           {/* Mobile Hamburger */}
           <button

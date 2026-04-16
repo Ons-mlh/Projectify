@@ -33,6 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "src/components/AuthButton.tsx",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
