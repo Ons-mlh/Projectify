@@ -17,5 +17,5 @@ export default function AuthButtons() {
     );
   }
 
-  return <button onClick={() => signIn('keycloak')}>Sign in</button>;
+  return <button onClick={() => signIn('keycloak', { callbackUrl: '/' })}>Sign in</button>;
 }

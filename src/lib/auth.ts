@@ -1,100 +1,87 @@
-import { NextAuthOptions } from "next-auth";
-import KeycloakProvider from "next-auth/providers/keycloak";
-import type { JWT } from 'next-auth/jwt'
+import { NextAuthOptions, DefaultSession } from "next-auth"
+import { MongoDBAdapter } from "@auth/mongodb-adapter"
+import GoogleProvider from "next-auth/providers/google"
+import GithubProvider from "next-auth/providers/github"
+import CredentialsProvider from "next-auth/providers/credentials"
+import clientPromise from "@/lib/mongodb"
+import bcrypt from "bcryptjs"
+
+declare module "next-auth" {
+  interface Session {
+    user: DefaultSession["user"] & {
+      id: string
+    }
+  }
+}
 
 export const authOptions: NextAuthOptions = {
-    providers: [
-        KeycloakProvider({
-            clientId: process.env.KEYCLOAK_CLIENT_ID!,
-            clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
-            issuer: process.env.KEYCLOAK_ISSUER!,
-        }),
-    ],
+  adapter: MongoDBAdapter(clientPromise),
 
-    pages: {
-        signIn: '/signin',
-        error: '/error',
-    },
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    GithubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
 
-    callbacks: {
-        async jwt({ token, account }) {
+        const client = await clientPromise
+        const db = client.db()
+        const user = await db.collection("users").findOne({ 
+          email: credentials.email 
+        })
 
-            if (account) {
-                return {
-                    ...token,
-                    accessToken: account.access_token,
-                    refreshToken: account.refresh_token,
-                    idToken: account.id_token,
-                    expiresAt: account.expires_at! * 1000,
-                };
-            }
+        if (!user || !user.password) return null
 
-            if (Date.now() < (token.expiresAt as number)) {
-                return token;
-            }
+        const isValid = await bcrypt.compare(credentials.password, user.password)
+        if (!isValid) return null
 
-            return await refreshAccessToken(token);
-        },
-        async session({ session, token }) {
-            session.accessToken = token.accessToken as string | undefined;
-            session.error = token.error as string | undefined;
-            session.refreshToken = token.refreshToken;
-            return session;
-        },
-    },
-
-    events: {
-        async signOut({ token }: { token: JWT }) {
-            const logoutUrl = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout`
-            await fetch(logoutUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    client_id: process.env.KEYCLOAK_CLIENT_ID!,
-                    client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
-                    refresh_token: token.refreshToken as string,
-                }),
-            })
-        },
-    },
-};
-
-async function refreshAccessToken(token: any) {
-    try {
-        const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-                client_id: process.env.KEYCLOAK_CLIENT_ID!,
-                client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
-                grant_type: "refresh_token",
-                refresh_token: token.refreshToken,
-            }),
-        });
-
-        const refreshedTokens = await response.json();
-
-        if (!response.ok) {
-            throw refreshedTokens;
+        // email verification
+        if (!user.emailVerified) {
+          throw new Error("Please verify your email before signing in")
         }
 
         return {
-            ...token,
-            accessToken: refreshedTokens.access_token,
-            idToken: refreshedTokens.id_token,
-            refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-            expiresAt: Date.now() + refreshedTokens.expires_in * 1000,
-        };
-    } catch (error) {
-        console.error("RefreshAccessTokenError", error);
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        }
+      },
+    }),
+  ],
 
-        return {
-            ...token,
-            error: "RefreshAccessTokenError",
-        };
-    }
+  pages: {
+    signIn: "/signin",
+    error: "/error",
+  },
+
+  session: {
+    strategy: "jwt",
+  },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string
+      }
+      return session
+    },
+  },
 }

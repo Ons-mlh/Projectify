@@ -164,4 +164,49 @@ export const FormAnswersSchema = z.object({
     .optional(),
 });
 
+export const signUpSchema = z.object({
+  firstName: z.string().min(1, "Name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email"),
+  password: z.string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "At least 1 uppercase letter")
+    .regex(/[a-z]/, "At least 1 lowercase letter")
+    .regex(/[0-9]/, "At least 1 number")
+    .regex(/[^A-Za-z0-9]/, "At least 1 special character"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+const passwordRequirementSchemas = {
+  minLength: z.string().min(8),
+  upper: z.string().regex(/[A-Z]/),
+  lower: z.string().regex(/[a-z]/),
+  number: z.string().regex(/[0-9]/),
+  special: z.string().regex(/[^A-Za-z0-9]/),
+} as const;
+
+export function getPasswordChecks(password: string) {
+  return {
+    minLength: passwordRequirementSchemas.minLength.safeParse(password).success,
+    upper: passwordRequirementSchemas.upper.safeParse(password).success,
+    lower: passwordRequirementSchemas.lower.safeParse(password).success,
+    number: passwordRequirementSchemas.number.safeParse(password).success,
+    special: passwordRequirementSchemas.special.safeParse(password).success,
+  };
+}
+
+export const signInSchema = z.object({
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email"),
+  password: z.string()
+    .min(1, "Password is required")
+    .min(8, "Password must be at least 8 characters"),
+})
+
 export type ValidatedFormAnswers = z.infer<typeof FormAnswersSchema>

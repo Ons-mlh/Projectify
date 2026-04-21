@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const isProtected = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL('/api/auth/signin', request.url))
+    return NextResponse.redirect(new URL('/signin', request.url))
   }
   
   return NextResponse.next()
