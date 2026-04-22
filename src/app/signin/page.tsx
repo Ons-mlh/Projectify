@@ -39,7 +39,7 @@ export default function SignInPage() {
       });
       if (result?.error) {
         if (result.error === "Please verify your email before signing in") {
-          setFormError("Please verify your email before signing in.");
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`
         } else {
           setFormError("Invalid email or password.");
         }
