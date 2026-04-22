@@ -18,16 +18,16 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#f6fffa] px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8 border border-gray-100 text-center">
-        <div className="text-5xl mb-4">📧</div>
-        <h1 className="text-2xl font-semibold text-gray-800">
+    <main className="min-h-screen flex items-start justify-center bg-[#f6fffa] px-3 py-4 sm:items-center sm:px-4 sm:py-10">
+      <div className="w-full max-w-md bg-white rounded-xl sm:rounded-2xl shadow-md p-5 sm:p-8 border border-gray-100 text-center">
+        <div className="text-4xl sm:text-5xl mb-4">📧</div>
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
           Check your email
         </h1>
-        <p className="text-gray-500 mt-3">
+        <p className="text-gray-500 mt-3 break-words">
           We sent a verification link to{" "}
           {email && (
-            <span className="font-medium text-gray-800">{email}</span>
+            <span className="mt-1 block font-medium text-gray-800 break-all">{email}</span>
           )}
         </p>
         <p className="text-gray-400 text-sm mt-4">
@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
         </p>
         <button
           onClick={handleResend}
-          className="mt-4 text-sm text-[#0f766e] hover:underline"
+          className="mt-4 inline-flex max-w-full text-sm text-[#0f766e] hover:underline"
         >
           Resend verification email
         </button>

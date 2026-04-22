@@ -95,7 +95,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#f6fffa] px-3 py-3 sm:px-4 sm:py-10">
+    <main className="min-h-screen flex items-start justify-center bg-[#f6fffa] px-3 py-3 sm:items-center sm:px-4 sm:py-10">
       <div className="w-full max-w-md bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-8 border border-gray-100">
         <h1 className="text-lg sm:text-2xl font-semibold text-center text-gray-800">
           Create your account
