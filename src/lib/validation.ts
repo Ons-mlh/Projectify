@@ -113,7 +113,8 @@ const technologyValues = [
   "splunk",
 ] as const;
 
-export const FormAnswersSchema = z.object({
+export const FormAnswersSchema = z
+  .object({
   domain: z.enum(domainValues, {
     message: "Invalid domain selected",
   }),
@@ -124,7 +125,6 @@ export const FormAnswersSchema = z.object({
 
   technologies: z
     .array(z.enum(technologyValues))
-    .min(1, "Select at least one technology")
     .max(10, "Too many technologies selected"),
 
   timeAvailable: z.enum(timeValues, {
@@ -149,20 +149,44 @@ export const FormAnswersSchema = z.object({
     .optional(),
 
   additionalConstraints: z
-  .string()
-  .max(300, "Keep constraints under 300 characters")
-  .regex(
-    /^[a-zA-Z0-9\s,.\-_!?()\/]+$/,
-    "Only letters, numbers and basic punctuation allowed"
-  )
-  .optional(),
+    .preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === "" ? undefined : value,
+      z
+        .string()
+        .max(300, "Keep constraints under 300 characters")
+        .regex(
+          /^[a-zA-Z0-9\s,.\-_!?()\/]+$/,
+          "Only letters, numbers and basic punctuation allowed"
+        )
+        .optional()
+    ),
 
   customTechnologies: z
-    .string()
-    .max(300, "Too long")
-    .regex(/^[a-zA-Z0-9,.\s\-_#@+/]*$/, "Invalid characters detected")
-    .optional(),
-});
+    .preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === "" ? undefined : value,
+      z
+        .string()
+        .max(300, "Too long")
+        .regex(/^[a-zA-Z0-9,.\s\-_#@+/]*$/, "Invalid characters detected")
+        .optional()
+    ),
+})
+  .superRefine((data, ctx) => {
+    const hasSelectedTechnologies = data.technologies.length > 0;
+    const hasCustomTechnologies =
+      typeof data.customTechnologies === "string" &&
+      data.customTechnologies.trim().length > 0;
+
+    if (!hasSelectedTechnologies && !hasCustomTechnologies) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["technologies"],
+        message: "Select at least one technology or provide custom technologies",
+      });
+    }
+  });
 
 export const signUpSchema = z.object({
   firstName: z.string().min(1, "Name is required"),

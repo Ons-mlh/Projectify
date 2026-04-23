@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,40 @@ export default function PromptBuilder() {
       return step;
     });
   }, [answers.domain]);
+  const loadingMessages = [
+    "Analyzing your profile...",
+    "Finding the best tech stack...",
+    "Crafting project ideas...",
+    "Almost there...",
+  ];
+
+  const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+
+  // Cycle through messages while loading
+  useEffect(() => {
+    if (!isLoading) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % loadingMessages.length;
+      setLoadingMessage(loadingMessages[i]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const isCurrentStepValid = useMemo(() => {
     const currentStepConfig = dynamicStepsConfig[currentStep - 1];
     if (!currentStepConfig.required) return true;
     const currentValue = answers[currentStepConfig.answerKey];
     if (currentStepConfig.type === "multiple") {
+      if (currentStepConfig.answerKey === "technologies") {
+        const hasSelectedTechnologies =
+          Array.isArray(currentValue) && currentValue.length > 0;
+        const hasCustomTechnologies =
+          typeof answers.customTechnologies === "string" &&
+          answers.customTechnologies.trim().length > 0;
+
+        return hasSelectedTechnologies || hasCustomTechnologies;
+      }
       return Array.isArray(currentValue) && currentValue.length > 0;
     }
     if (currentStepConfig.type === "text") {
@@ -88,6 +116,9 @@ export default function PromptBuilder() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Something went wrong");
 
+      sessionStorage.removeItem("projectsSaved");
+      sessionStorage.removeItem("lastSavedProjectsSignature");
+      sessionStorage.setItem("projectDomain", answers.domain);
       sessionStorage.setItem("projectSuggestions", data.result);
       router.push("/results");
     } catch (err: unknown) {
@@ -104,6 +135,38 @@ export default function PromptBuilder() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6">
+          {/* Animated spinner */}
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 border-4 border-teal-100 rounded-full" />
+            <div className="absolute inset-0 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+
+          {/* Animated message */}
+          <div className="text-center">
+            <p className="text-lg font-semibold text-gray-800 animate-pulse">
+              {loadingMessage}
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              This may take a few seconds...
+            </p>
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-teal-400 animate-bounce"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto">
         {/* Left Column - Form */}
         <div className="flex-1 min-w-0">
@@ -117,7 +180,7 @@ export default function PromptBuilder() {
               <ChevronLeft className="w-4 h-4" />
               Back
             </Button>
-          
+
             <h1 className="text-2xl sm:text-3xl font-bold text-teal-600 leading-tight mb-1">
               Unlock Your Next Project
             </h1>
@@ -167,11 +230,17 @@ export default function PromptBuilder() {
               onChange={(value) =>
                 handleAnswerChange(currentStepConfig.answerKey, value)
               }
-              customValue={currentStep === 3 ? answers.customTechnologies : undefined}
+              customValue={
+                currentStep === 3 ? answers.customTechnologies : undefined
+              }
               onCustomChange={
-                currentStep === 3 ?
-                (val) => setAnswers((prev) => ({...prev, customTechnologies: val})) 
-                : undefined
+                currentStep === 3
+                  ? (val) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        customTechnologies: val,
+                      }))
+                  : undefined
               }
             />
           </Card>
@@ -179,7 +248,7 @@ export default function PromptBuilder() {
           {/* Error */}
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
-              ⚠️ {error}
+              {error}
             </div>
           )}
 

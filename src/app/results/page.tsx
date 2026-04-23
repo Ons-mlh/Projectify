@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,20 +12,51 @@ import {
   Star,
   Lightbulb,
 } from "lucide-react";
-
+import { useSession } from "next-auth/react";
 interface Project {
   number: string;
   title: string;
+  domain?: string;
   description: string;
   technologies: string[];
   features: string[];
   whyItFits: string;
 }
 
+const DOMAIN_LABELS: Record<string, string> = {
+  frontend: "Frontend Web",
+  fullstack: "Full-Stack Web",
+  backend: "Backend / API",
+  mobile: "Mobile Development",
+  ai: "AI / Machine Learning",
+  data: "Data / Analytics",
+  iot: "IoT / Embedded Systems",
+  desktop: "Desktop Applications",
+  devops: "DevOps / Infrastructure",
+  cybersecurity: "Cybersecurity",
+};
+
+function formatDomain(domain?: string): string {
+  if (!domain) return "General";
+  const normalized = domain.trim().toLowerCase();
+  return DOMAIN_LABELS[normalized] ?? domain;
+}
+
+function getProjectsSignature(projects: Project[]): string {
+  return projects
+    .map((p) => {
+      const title = p.title?.trim().toLowerCase() ?? "";
+      const description = p.description?.trim().toLowerCase() ?? "";
+      const domain = p.domain?.trim().toLowerCase() ?? "";
+      return `${title}::${description}::${domain}`;
+    })
+    .sort()
+    .join("||");
+}
+
 function parseProjects(raw: string): Project[] {
   const projects: Project[] = [];
 
-  // Split by PROJECT [n]:
   const blocks = raw.split(/PROJECT\s+\d+\s*:/i).filter((b) => {
     const trimmed = b.trim();
     return trimmed.length > 0 && !/^-+$/.test(trimmed);
@@ -48,11 +79,11 @@ function parseProjects(raw: string): Project[] {
           .startsWith(label.toUpperCase()),
       );
       if (idx === -1) return "";
-      // collect lines until next section header
+
       const sectionLines: string[] = [];
       for (let i = idx + 1; i < lines.length; i++) {
         if (
-          /^(DESCRIPTION|TECHNOLOGIES USED|KEY FEATURES|WHY IT FITS YOU)\s*:/i.test(
+          /^(DOMAIN|DESCRIPTION|TECHNOLOGIES USED|KEY FEATURES|WHY IT FITS YOU)\s*:/i.test(
             lines[i],
           )
         )
@@ -61,25 +92,25 @@ function parseProjects(raw: string): Project[] {
         if (/^-{2,}$/.test(lines[i])) break;
         sectionLines.push(lines[i]);
       }
-      // also check if the header line itself has inline content
       const headerLine = lines[idx];
       const inlineContent = headerLine.replace(/^[^:]+:\s*/, "").trim();
       if (inlineContent) sectionLines.unshift(inlineContent);
       return sectionLines.join(" ").trim();
     };
 
+    const domain = getSection("DOMAIN:");
     const description = getSection("DESCRIPTION:");
     const technologiesRaw = getSection("TECHNOLOGIES USED:");
     const featuresRaw = getSection("KEY FEATURES:");
     const whyItFits = getSection("WHY IT FITS YOU:");
 
-    // Parse technologies — split by comma or newline, clean up
+    const reposRaw = getSection("SIMILAR GITHUB REPOS:");
+
     const technologies = technologiesRaw
       .split(/[,\n•\-]/)
       .map((t) => t.replace(/\(.*?\)/g, "").trim())
       .filter((t) => t.length > 1 && t.length < 40);
 
-    // Parse features — split by bullet points or newlines
     const features = featuresRaw
       .split(/[•\n\-]/)
       .map((f) => f.trim())
@@ -88,6 +119,7 @@ function parseProjects(raw: string): Project[] {
     projects.push({
       number: String(index + 1),
       title: title.replace(/^PROJECT\s*\d*:?\s*/i, "").trim(),
+      domain,
       description,
       technologies,
       features,
@@ -160,7 +192,7 @@ Why it fits: ${project.whyItFits}
             <span
               className={`text-xs font-bold uppercase tracking-widest ${color.accent}`}
             >
-              Project {project.number}
+              {formatDomain(project.domain)}
             </span>
           </div>
           <button
@@ -250,6 +282,7 @@ Why it fits: ${project.whyItFits}
             </p>
           </div>
         )}
+
       </div>
     </div>
   );
@@ -260,6 +293,9 @@ export default function ResultsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [raw, setRaw] = useState<string>("");
   const [parseError, setParseError] = useState(false);
+  const saveInFlightRef = useRef(false);
+
+  const { data: session } = useSession();
 
   useEffect(() => {
     const stored = sessionStorage.getItem("projectSuggestions");
@@ -270,22 +306,70 @@ export default function ResultsPage() {
     setRaw(stored);
     try {
       const parsed = parseProjects(stored);
-      const valid = parsed.filter((p) => p.title && p.description).slice(0, 3);
+      const selectedDomain = (
+        sessionStorage.getItem("projectDomain") ?? ""
+      ).trim();
+      const valid = parsed
+        .filter((p) => p.title && p.description)
+        .slice(0, 3)
+        .map((p) => ({
+          ...p,
+          domain: p.domain?.trim() || selectedDomain || undefined,
+        }));
 
       if (valid.length === 0) {
         setParseError(true);
       } else {
         setProjects(valid);
+
+        if (session) {
+          autoSave(valid);
+        }
       }
     } catch {
       setParseError(true);
     }
-  }, []);
+  }, [session]);
+
+  const autoSave = async (projectsToSave: Project[]) => {
+    if (saveInFlightRef.current) {
+      return;
+    }
+
+    const signature = getProjectsSignature(projectsToSave);
+    if (sessionStorage.getItem("lastSavedProjectsSignature") === signature) {
+      return;
+    }
+
+    try {
+      saveInFlightRef.current = true;
+      const domain = sessionStorage.getItem("projectDomain") ?? "";
+
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projects: projectsToSave, domain }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save projects");
+      }
+
+      sessionStorage.setItem("projectsSaved", "true");
+      sessionStorage.setItem("lastSavedProjectsSignature", signature);
+    } catch (error) {
+      console.error("Auto-save failed:", error);
+      sessionStorage.removeItem("projectsSaved");
+      sessionStorage.removeItem("lastSavedProjectsSignature");
+    } finally {
+      saveInFlightRef.current = false;
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Page title */}
-      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8 flex flex-row items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 pt-12 pb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Sparkles className="w-5 h-5 text-teal-500" />
@@ -304,9 +388,12 @@ export default function ResultsPage() {
         <button
           onClick={() => {
             sessionStorage.removeItem("projectSuggestions");
+            sessionStorage.removeItem("projectDomain");
+            sessionStorage.removeItem("projectsSaved");
+            sessionStorage.removeItem("lastSavedProjectsSignature");
             router.push("/project-generator");
           }}
-          className="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-700 border border-teal-200 hover:border-teal-300 rounded-lg px-4 py-2 transition-colors bg-white"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-teal-200 bg-teal-50 text-teal-700 font-medium text-sm hover:bg-teal-100 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Regenerate

@@ -115,12 +115,12 @@ export function buildPrompt(answers: FormAnswers): string {
         Explain exactly why THIS project — not the others — matches their ${difficulty} level,
         fits within ${timeAvailable}, and makes good use of ${technologies.join(", ")}.
         Do NOT copy or repeat the same explanation across projects.]
-
         ---
         Be specific, creative, and avoid suggesting projects that are too basic or too complex for the given profile.
 
         IMPORTANT: The WHY IT FITS YOU section must be completely different for each project.
         Each one should mention the specific project name and explain what makes it uniquely
         suitable compared to the other suggestions.
+
     `.trim();
 }
