@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 import NextAuth, { DefaultSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
