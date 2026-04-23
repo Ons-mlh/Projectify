@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import OpenAi from "openai";
 import { buildPrompt } from "@/lib/buildPrompt";
 import { NextRequest, NextResponse } from "next/server";

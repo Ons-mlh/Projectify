@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/signin',
-    '/signup',
+    '/signup', 
     '/my-projects/:path*',
     '/profile/:path*',
   ],

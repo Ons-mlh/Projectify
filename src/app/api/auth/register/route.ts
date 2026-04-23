@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from "next/server";
 import { sendVerificationEmail } from "@/lib/mailer";
 import clientPromise from "@/lib/mongodb";

@@ -2,8 +2,9 @@
 
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { Suspense } from "react"
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams?.get("email") ?? null
 
@@ -49,5 +50,17 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-[#f6fffa]">
+        <div className="animate-pulse text-gray-400">Loading...</div>
+      </main>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
