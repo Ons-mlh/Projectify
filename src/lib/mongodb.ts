@@ -1,15 +1,18 @@
-import { MongoClient } from "mongodb"
+import { MongoClient, MongoClientOptions } from "mongodb"
 
-const uri = process.env.MONGODB_URI!
+if (!process.env.MONGODB_URI) {
+  throw new Error('Missing MONGODB_URI environment variable')
+}
+
+const uri = process.env.MONGODB_URI
+const options: MongoClientOptions = {
+  tls: true,
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 10000,
+}
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
-
-const mongoOptions = {
-  serverSelectionTimeoutMS: 10000,
-  connectTimeoutMS: 10000,
-  family: 4,
-} as const
 
 declare global {
   var _mongoClientPromise: Promise<MongoClient>
@@ -17,12 +20,12 @@ declare global {
 
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, mongoOptions)
+    client = new MongoClient(uri, options)
     global._mongoClientPromise = client.connect()
   }
   clientPromise = global._mongoClientPromise
 } else {
-  client = new MongoClient(uri, mongoOptions)
+  client = new MongoClient(uri, options)
   clientPromise = client.connect()
 }
 
